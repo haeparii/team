@@ -127,8 +127,11 @@ elif not st.session_state.is_admin:
     st.title(f"환영합니다, {st.session_state.user_info['이름']} 학생!")
     
     user_id = st.session_state.user_info['학번']
+    
+    # [수정됨] 이미 설문을 완료한 학생이 로그인했을 때 본인의 성향을 보여줌
     if user_id in responses:
-        st.success("이미 설문을 완료하셨습니다. 참여해 주셔서 감사합니다.")
+        my_tendency = responses[user_id].get("성향", "알 수 없음")
+        st.success(f"이미 설문을 완료하셨습니다. 분석된 나의 조별 활동 유형은 **[{my_tendency}]** 입니다. 참여해 주셔서 감사합니다.")
         if st.button("로그아웃"):
             st.session_state.logged_in = False
             st.rerun()
@@ -173,8 +176,10 @@ elif not st.session_state.is_admin:
                         "하고싶은말": comments
                     }
                     save_responses(responses)
-                    st.success("제출이 완료되었습니다!")
-                    st.rerun()
+                    
+                    # [수정됨] 제출 직후 학생에게 본인의 성향 분석 결과를 알려줌
+                    st.success(f"제출이 완료되었습니다! 분석된 학생의 조별 활동 유형은 **[{max_tendency}]** 입니다.")
+                    st.balloons()
 
 # --- 5. 관리자 화면 (조 편성 및 초기화 기능 포함) ---
 else:
@@ -271,7 +276,7 @@ else:
         for team in st.session_state.teams_result:
             with st.expander(f"Team {team['team_id']} (인원: {len(team['members'])}명)"):
                 if team["members"]:
-                    team_df = pd.DataFrame(team["members"])[["이름", "소속", "성별", "MBTI", "성향"]]
+                    team_df = pd.DataFrame(team["members"])[["이름", "소속", "성별", "MBTI", "성향", "관심주제"]]
                     st.table(team_df)
                 else:
                     st.write("배정된 인원이 없습니다.")
